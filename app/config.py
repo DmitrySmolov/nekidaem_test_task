@@ -1,10 +1,13 @@
-from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    """Основные настройки приложения."""
     app_title: str = 'NeKidaem'
     app_description: str = 'NeKidaem API'
-    database_url: str = 'postgresql://nekidaem:nekidaem@localhost/nekidaem'
+    database_url: str = (
+        'postgresql+asyncpg://nekidaem:nekidaem@localhost/nekidaem'
+    )
     logging_format: str = '%(asctime)s - %(levelname)s - %(message)s'
     logging_dt_format: str = '%Y-%m-%d %H:%M:%S'
 
@@ -13,3 +16,14 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+class Constants:
+    """Константы приложения."""
+    # Пользовательские роли
+    TITLE_MAX_LENGTH = 50
+    CONTENT_MAX_LENGTH = 140
+    EMAIL_MAX_LENGTH = 254
+
+
+constants = Constants()

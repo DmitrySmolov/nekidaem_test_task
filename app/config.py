@@ -24,6 +24,8 @@ class Constants:
     TITLE_MAX_LENGTH = 50
     CONTENT_MAX_LENGTH = 140
     EMAIL_MAX_LENGTH = 254
+    POSTS_PER_PAGE = 10
+    MAX_POSTS_IN_FEED = 500
 
 
 constants = Constants()

@@ -39,7 +39,7 @@ class Blog(Base):
     например, если в будущем будет поддержка нескольких блогов).
     """
     user_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'))
-    title = Column(String(const.TITLE_MAX_LENGTH))
+    title = Column(String(const.TITLE_MAX_LENGTH), nullable=False)
 
     posts = relationship('Post', back_populates='blog', cascade='all, delete')
     subscriptions = relationship(
@@ -52,8 +52,10 @@ class Blog(Base):
 
 class Post(Base):
     """Модель поста в блоге."""
-    blog_id = Column(Integer, ForeignKey('blogs.id'))
-    title = Column(String(const.TITLE_MAX_LENGTH))
+    blog_id = Column(
+        Integer, ForeignKey('blogs.id'), nullable=False
+    )
+    title = Column(String(const.TITLE_MAX_LENGTH), nullable=False)
     content = Column(String(const.CONTENT_MAX_LENGTH))
 
     read_statuses = relationship(
@@ -66,8 +68,8 @@ class Post(Base):
 
 class Subscription(Base):
     """Модель подпписки пользователя на блог."""
-    user_id = Column(Integer, ForeignKey('users.id'))
-    blog_id = Column(Integer, ForeignKey('blogs.id'))
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    blog_id = Column(Integer, ForeignKey('blogs.id'), nullable=False)
 
     def __str__(self) -> str:
         return (
@@ -78,8 +80,8 @@ class Subscription(Base):
 
 class ReadStatus(Base):
     """Модель статуса прочтения поста пользователем."""
-    user_id = Column(Integer, ForeignKey('users.id'))
-    post_id = Column(Integer, ForeignKey('posts.id'))
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    post_id = Column(Integer, ForeignKey('posts.id'), nullable=False)
 
     def __str__(self) -> str:
         return (

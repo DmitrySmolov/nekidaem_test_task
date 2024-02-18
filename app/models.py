@@ -45,6 +45,7 @@ class Blog(Base):
     subscriptions = relationship(
         'Subscription', back_populates='blog', cascade='all, delete'
     )
+    user = relationship('User', back_populates='blogs')
 
     def __str__(self) -> str:
         return f'Блог "{self.title}" пользователя {self.user.username}'
@@ -61,6 +62,7 @@ class Post(Base):
     read_statuses = relationship(
         'ReadStatus', back_populates='post', cascade='all, delete'
     )
+    blog = relationship('Blog', back_populates='posts')
 
     def __str__(self) -> str:
         return f'Пост "{self.title}" в блоге {self.blog.title}'
@@ -70,6 +72,9 @@ class Subscription(Base):
     """Модель подпписки пользователя на блог."""
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     blog_id = Column(Integer, ForeignKey('blogs.id'), nullable=False)
+
+    user = relationship('User', back_populates='subscriptions')
+    blog = relationship('Blog', back_populates='subscriptions')
 
     def __str__(self) -> str:
         return (
@@ -82,6 +87,9 @@ class ReadStatus(Base):
     """Модель статуса прочтения поста пользователем."""
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     post_id = Column(Integer, ForeignKey('posts.id'), nullable=False)
+
+    user = relationship('User', back_populates='read_statuses')
+    post = relationship('Post', back_populates='read_statuses')
 
     def __str__(self) -> str:
         return (

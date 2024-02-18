@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Optional
 
 from pydantic import BaseModel, EmailStr, Field
 
@@ -37,11 +37,15 @@ class BlogCreate(BaseModel):
         orm_mode = True
 
 
+class BlogView(ViewMixin, BlogCreate):
+    """Схема для отображения блога."""
+    pass
+
+
 class PostCreate(BaseModel):
     """Схема для создания поста."""
-    blog_id: int
     title: Annotated[str, Field(max_length=const.TITLE_MAX_LENGTH)]
-    content: Annotated[str, Field(max_length=const.CONTENT_MAX_LENGTH)] | None
+    content: Optional[str] = Field(None, max_length=const.CONTENT_MAX_LENGTH)
 
     class Config:
         orm_mode = True
@@ -50,6 +54,11 @@ class PostCreate(BaseModel):
 class PostView(ViewMixin, PostCreate):
     """Схема для отображения поста."""
     pass
+
+
+class PostInFeed(PostView):
+    """Схема для отображения поста в ленте."""
+    blog_id: int
 
 
 class SubscriptionCreate(BaseModel):

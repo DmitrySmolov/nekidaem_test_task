@@ -50,7 +50,7 @@ async def create_post(
 async def get_posts_for_blog(
     blog_id: int,
     session: AsyncSession = Depends(get_async_session)
-):
+) -> Page[PostView]:
     """Возвращает список всех постов блога с пагинацией."""
     await check_blog_exists(session=session, blog_id=blog_id)
     db_posts = await post_crud.get_multi_for_blog(

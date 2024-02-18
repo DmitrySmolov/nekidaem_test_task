@@ -25,6 +25,6 @@ app = FastAPI(
     description=settings.app_description
 )
 
-add_pagination(app)
-
 app.include_router(main_router)
+
+add_pagination(app)

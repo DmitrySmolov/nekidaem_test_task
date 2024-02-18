@@ -11,7 +11,7 @@ class CRUDBase:
     def __init__(self, model):
         self.model = model
 
-    async def get(self, session: AsyncSession, obj_id: int):
+    async def get_by_id(self, session: AsyncSession, obj_id: int):
         """Возвращает объект по его ID."""
         db_obj = await session.execute(
             select(self.model).where(self.model.id == obj_id)
@@ -149,21 +149,67 @@ class RemoveMixin:
     """Миксин для удаления объектов."""
     async def remove(self, session: AsyncSession, db_obj):
         """Удаляет объект."""
-        session.delete(db_obj)
+        await session.delete(db_obj)
         await session.commit()
         return db_obj
 
 
-class SubscriptionAndReadStatusCRUD(CRUDBase, RemoveMixin):
+class UserToObjRelationsMixin:
     """
-    Класс для CRUD-операций с подписками и статусом прочтения с возможностью
-    удаления объектов.
+    Миксин для извлечения объектов из базы по ID пользователя для моделей
+    Subscription и ReadStatus.
     """
-    pass
+
+    async def get_multi_for_user(
+        self, session: AsyncSession, user_id: int
+    ):
+        """Возвращает список объектов из базы по ID пользователя."""
+        db_objs = await session.execute(
+            select(self.model).where(self.model.user_id == user_id).order_by(
+                desc(self.model.created_at)
+            )
+        )
+        return db_objs.scalars().all()
+
+
+class SubscriptionCRUD(
+    CRUDBase, RemoveMixin, UserToObjRelationsMixin
+):
+    """Класс для CRUD-операций с подписками."""
+
+    async def get(
+        self, session: AsyncSession, user_id: int, blog_id: int
+    ):
+        """Возвращает подписку из базы по ID пользователя и блога."""
+        db_obj = await session.execute(
+            select(self.model).where(
+                (self.model.user_id == user_id) &
+                (self.model.blog_id == blog_id)
+            )
+        )
+        return db_obj.scalars().first()
+
+
+class ReadStatusCRUD(
+    CRUDBase, RemoveMixin, UserToObjRelationsMixin
+):
+    """Класс для CRUD-операций со статусами прочтения постов."""
+
+    async def get(
+        self, session: AsyncSession, user_id: int, post_id: int
+    ):
+        """Возвращает статус прочтения из базы по ID пользователя и поста."""
+        db_obj = await session.execute(
+            select(self.model).where(
+                (self.model.user_id == user_id) &
+                (self.model.post_id == post_id)
+            )
+        )
+        return db_obj.scalars().first()
 
 
 user_crud = UserCRUD(User)
 blog_crud = CRUDBase(Blog)
 post_crud = PostCRUD(Post)
-subscription_crud = SubscriptionAndReadStatusCRUD(Subscription)
-read_status_crud = SubscriptionAndReadStatusCRUD(ReadStatus)
+subscription_crud = SubscriptionCRUD(Subscription)
+read_status_crud = SubscriptionCRUD(ReadStatus)

@@ -63,11 +63,15 @@ class PostInFeed(PostView):
 
 class SubscriptionCreate(BaseModel):
     """Схема для создания подписки пользователя на блог."""
-    user_id: int
     blog_id: int
 
     class Config:
         orm_mode = True
+
+
+class SubscriptionView(ViewMixin, SubscriptionCreate):
+    """Схема для отображения подписки пользователя на блог."""
+    user_id: int
 
 
 class ReadStatusCreate(BaseModel):

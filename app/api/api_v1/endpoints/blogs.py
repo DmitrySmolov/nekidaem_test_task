@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, status
+from fastapi_pagination import Page, paginate
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.api_v1.validators import check_blog_exists
@@ -42,7 +43,7 @@ async def create_post(
 
 @router.get(
     path='/{blog_id}/posts',
-    response_model=list[PostView],
+    response_model=Page[PostView],
     response_model_exclude_none=True,
     status_code=status.HTTP_200_OK
 )
@@ -50,9 +51,9 @@ async def get_posts_for_blog(
     blog_id: int,
     session: AsyncSession = Depends(get_async_session)
 ):
-    """Возвращает список всех постов блога."""
+    """Возвращает список всех постов блога с пагинацией."""
     await check_blog_exists(session=session, blog_id=blog_id)
     db_posts = await post_crud.get_multi_for_blog(
         session=session, blog_id=blog_id
     )
-    return db_posts
+    return paginate(db_posts)

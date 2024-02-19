@@ -27,6 +27,7 @@ class Constants:
     EMAIL_MAX_LENGTH = 254
     POSTS_PER_PAGE = 10
     MAX_POSTS_IN_FEED = 500
+    POSTS_PER_EMAIL = 5
 
 
 constants = Constants()

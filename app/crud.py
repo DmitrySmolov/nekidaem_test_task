@@ -91,10 +91,13 @@ class PostCRUD(CRUDBase, RemoveMixin):
         return result.scalars().all()
 
     async def get_multi_for_user_feed(
-        self, session: AsyncSession, user_id: int
+        self, session: AsyncSession, user_id: int,
+        limit: int | None = None
     ):
         """Возвращает все посты для ленты пользователя."""
         statement = self._get_base_query_for_user_feed(user_id)
+        if limit:
+            statement = statement.limit(limit)
         db_objs = await session.execute(statement)
         return db_objs.scalars().all()
 

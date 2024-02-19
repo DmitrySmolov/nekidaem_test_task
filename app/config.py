@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     )
     logging_format: str = '%(asctime)s - %(levelname)s - %(message)s'
     logging_dt_format: str = '%Y-%m-%d %H:%M:%S'
+    redis_url: str = 'redis://localhost:6379/0'
 
     class Config:
         env_file = '.env'

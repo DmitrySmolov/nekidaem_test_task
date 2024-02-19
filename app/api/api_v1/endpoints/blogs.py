@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Response, status
 from fastapi_pagination import Page, paginate
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.api_v1.validators import check_blog_exists
+from app.api.api_v1.validators import check_blog_exists, check_post_exists
 from app.db.session import get_async_session
 from app.crud import blog_crud, post_crud
 from app.schemas import BlogView, PostCreate, PostView
@@ -27,7 +27,8 @@ async def get_blogs(
     path='/{blog_id}/posts',
     response_model=PostView,
     response_model_exclude_none=True,
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    tags=['posts']
 )
 async def create_post(
     blog_id: int,
@@ -41,11 +42,27 @@ async def create_post(
     return db_post
 
 
+@router.delete(
+    path='/posts/{post_id}',
+    status_code=status.HTTP_204_NO_CONTENT,
+    tags=['posts']
+)
+async def delete_post(
+    post_id: int,
+    session: AsyncSession = Depends(get_async_session)
+):
+    """Удаляет пост."""
+    db_post = await check_post_exists(session=session, post_id=post_id)
+    await post_crud.remove(session=session, db_obj=db_post)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.get(
     path='/{blog_id}/posts',
     response_model=Page[PostView],
     response_model_exclude_none=True,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    tags=['posts']
 )
 async def get_posts_for_blog(
     blog_id: int,

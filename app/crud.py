@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.config import constants as const
 from app.models import Blog, Post, ReadStatus, Subscription, User
 
 
@@ -18,18 +17,15 @@ class CRUDBase:
         )
         return db_obj.scalars().first()
 
-    async def get_multi(
-        self, session: AsyncSession,
-        skip: int = 0, limit: int = const.MAX_POSTS_IN_FEED
-    ):
+    async def get_multi(self, session: AsyncSession):
         """
         Возвращает список объектов в обратном хронологическом порядке
-        времени их создания с возможностью пагинации.
+        времени их создания.
         """
         db_objs = await session.execute(
             select(self.model).order_by(
                 desc(self.model.created_at)
-            ).offset(skip).limit(limit)
+            )
         )
         return db_objs.scalars().all()
 
@@ -60,7 +56,15 @@ class UserCRUD(CRUDBase):
         return db_user.scalars().all()
 
 
-class PostCRUD(CRUDBase):
+class RemoveMixin:
+    """Миксин для удаления объектов."""
+    async def remove(self, session: AsyncSession, db_obj):
+        """Удаляет объект."""
+        await session.delete(db_obj)
+        await session.commit()
+
+
+class PostCRUD(CRUDBase, RemoveMixin):
     """Класс для CRUD-операций с постами."""
 
     @staticmethod
@@ -87,71 +91,47 @@ class PostCRUD(CRUDBase):
         return result.scalars().all()
 
     async def get_multi_for_user_feed(
-        self, session: AsyncSession, user_id: int,
-        skip: int = 0, limit: int = const.POSTS_PER_PAGE
+        self, session: AsyncSession, user_id: int
     ):
-        """
-        Возвращает посты для ленты пользователя с возможностью пагинации.
-        """
-        base_query = self._get_base_query_for_user_feed(user_id)
-        statement = base_query.offset(skip).limit(limit)
+        """Возвращает все посты для ленты пользователя."""
+        statement = self._get_base_query_for_user_feed(user_id)
         db_objs = await session.execute(statement)
         return db_objs.scalars().all()
 
     async def get_multi_unread_for_user_feed(
-        self, session: AsyncSession, user_id: int,
-        skip: int = 0, limit: int = const.MAX_POSTS_IN_FEED
+        self, session: AsyncSession, user_id: int
     ):
-        """
-        Возвращает непрочитанные посты для ленты пользователя с возможностью
-        пагинации.
-        """
+        """Возвращает непрочитанные посты для ленты пользователя."""
         read_posts_ids = await self._get_read_posts_ids(session, user_id)
         base_query = self._get_base_query_for_user_feed(user_id)
         statement = base_query.where(
             self.model.id.notin_(read_posts_ids)
-        ).offset(skip).limit(limit)
+        )
         db_objs = await session.execute(statement)
         return db_objs.scalars().all()
 
     async def get_multi_read_for_user_feed(
-        self, session: AsyncSession, user_id: int,
-        skip: int = 0, limit: int = const.MAX_POSTS_IN_FEED
+        self, session: AsyncSession, user_id: int
     ):
-        """
-        Возвращает прочитанные посты для ленты пользователя с возможностью
-        пагинации.
-        """
+        """Возвращает прочитанные посты для ленты пользователя."""
         read_posts_ids = await self._get_read_posts_ids(session, user_id)
         base_query = self._get_base_query_for_user_feed(user_id)
         statement = base_query.where(
             self.model.id.in_(read_posts_ids)
-        ).offset(skip).limit(limit)
+        )
         db_objs = await session.execute(statement)
         return db_objs.scalars().all()
 
     async def get_multi_for_blog(
-        self, session: AsyncSession, blog_id: int,
-        skip: int = 0, limit: int = const.MAX_POSTS_IN_FEED
+        self, session: AsyncSession, blog_id: int
     ):
-        """
-        Возвращает посты для блога с возможностью пагинации.
-        """
+        """Возвращает посты данного блога."""
         db_objs = await session.execute(
             select(self.model).where(
                 self.model.blog_id == blog_id
-            ).order_by(desc(self.model.created_at)).offset(skip).limit(limit)
+            ).order_by(desc(self.model.created_at))
         )
         return db_objs.scalars().all()
-
-
-class RemoveMixin:
-    """Миксин для удаления объектов."""
-    async def remove(self, session: AsyncSession, db_obj):
-        """Удаляет объект."""
-        await session.delete(db_obj)
-        await session.commit()
-        return db_obj
 
 
 class UserToObjRelationsMixin:
@@ -212,4 +192,4 @@ user_crud = UserCRUD(User)
 blog_crud = CRUDBase(Blog)
 post_crud = PostCRUD(Post)
 subscription_crud = SubscriptionCRUD(Subscription)
-read_status_crud = SubscriptionCRUD(ReadStatus)
+read_status_crud = ReadStatusCRUD(ReadStatus)

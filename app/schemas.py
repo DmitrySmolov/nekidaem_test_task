@@ -57,7 +57,7 @@ class PostView(ViewMixin, PostCreate):
 
 
 class PostInFeed(PostView):
-    """Схема для отображения поста в ленте."""
+    """Схема для отображения поста в ленте пользователя."""
     blog_id: int
 
 
@@ -76,8 +76,12 @@ class SubscriptionView(ViewMixin, SubscriptionCreate):
 
 class ReadStatusCreate(BaseModel):
     """Схема для создания записи о прочитанном пользователем посте."""
-    user_id: int
     post_id: int
 
     class Config:
         orm_mode = True
+
+
+class ReadStatusView(ViewMixin, ReadStatusCreate):
+    """Схема для отображения записи о прочитанном пользователем посте."""
+    user_id: int

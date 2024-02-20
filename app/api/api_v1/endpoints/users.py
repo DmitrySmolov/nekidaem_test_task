@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Response, status
-from fastapi_pagination import Page, paginate
+from fastapi_pagination import paginate
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.api_v1.validators import (
@@ -7,11 +7,12 @@ from app.api.api_v1.validators import (
     check_subscription_exists, check_user_exists,
     check_user_is_blog_owner, check_username_or_email_exists
 )
-from app.db.session import get_async_session
 from app.crud import (
     blog_crud, post_crud, read_status_crud, subscription_crud, user_crud
 )
+from app.db.session import get_async_session
 from app.models import User
+from app.pagination import CustomPage as Page
 from app.schemas import (
     BlogCreate, PostView, PostInFeed, ReadStatusCreate, ReadStatusView,
     SubscriptionCreate, SubscriptionView, UserCreate, UserView
@@ -28,7 +29,7 @@ router = APIRouter()
 async def create_user(
     obj_in: UserCreate,
     session: AsyncSession = Depends(get_async_session)
-):
+) -> UserView:
     """Создает нового пользователя и его блог."""
     username = obj_in.username
     email = obj_in.email
@@ -48,7 +49,7 @@ async def create_user(
 )
 async def get_users(
     session: AsyncSession = Depends(get_async_session)
-):
+) -> list[UserView]:
     """Возвращает список всех пользователей."""
     db_users = await user_crud.get_multi(session)
     return db_users
@@ -63,7 +64,7 @@ async def get_users(
 async def subscribe_user_to_blog(
     user_id: int, obj_in: SubscriptionCreate,
     session: AsyncSession = Depends(get_async_session)
-):
+) -> SubscriptionView:
     """Создает подписку пользователя на блог."""
     await check_user_exists(session=session, user_id=user_id)
     blog_id = obj_in.blog_id
@@ -89,7 +90,7 @@ async def subscribe_user_to_blog(
 async def unsubscribe_user_from_blog(
     user_id: int, blog_id: int,
     session: AsyncSession = Depends(get_async_session)
-):
+) -> Response:
     """Удаляет подписку пользователя на блог."""
     await check_user_exists(session=session, user_id=user_id)
     await check_blog_exists(session=session, blog_id=blog_id)
@@ -109,7 +110,7 @@ async def unsubscribe_user_from_blog(
 )
 async def get_user_subscriptions(
     user_id: int, session: AsyncSession = Depends(get_async_session)
-):
+) -> list[SubscriptionView]:
     """Возвращает список подписок пользователя на блоги."""
     await check_user_exists(session=session, user_id=user_id)
     db_objs = await subscription_crud.get_multi_for_user(session, user_id)
@@ -125,7 +126,7 @@ async def get_user_subscriptions(
 async def mark_post_as_read_by_user(
     user_id: int, obj_in: ReadStatusCreate,
     session: AsyncSession = Depends(get_async_session)
-):
+) -> ReadStatusView:
     """Создает запись о прочитанном пользователем посте."""
     await check_user_exists(session=session, user_id=user_id)
     post_id = obj_in.post_id
@@ -147,7 +148,7 @@ async def mark_post_as_read_by_user(
 async def unmark_post_as_read_by_user(
     user_id: int, post_id: int,
     session: AsyncSession = Depends(get_async_session)
-):
+) -> Response:
     """Удаляет запись о прочитанном пользователем посте."""
     await check_user_exists(session=session, user_id=user_id)
     await check_post_exists(session=session, post_id=post_id)
@@ -166,7 +167,7 @@ async def unmark_post_as_read_by_user(
 )
 async def get_user_read_statuses(
     user_id: int, session: AsyncSession = Depends(get_async_session)
-):
+) -> list[ReadStatusView]:
     """Возвращает список записей о прочитанных пользователем постах."""
     await check_user_exists(session=session, user_id=user_id)
     db_objs = await read_status_crud.get_multi_for_user(session, user_id)
@@ -206,7 +207,7 @@ async def get_user_feed(
 
 async def _create_first_blog_for_user(
     user: User, session: AsyncSession
-):
+) -> None:
     """
     Создает первый блог для пользователя после создания самого пользователя.
     """

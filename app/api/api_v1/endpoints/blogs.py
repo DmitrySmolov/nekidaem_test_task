@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, Response, status
-from fastapi_pagination import Page, paginate
+from fastapi_pagination import paginate
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.api_v1.validators import check_blog_exists, check_post_exists
-from app.db.session import get_async_session
+from app.pagination import CustomPage as Page
 from app.crud import blog_crud, post_crud
+from app.db.session import get_async_session
 from app.schemas import BlogView, PostCreate, PostView
 
 router = APIRouter()
@@ -17,7 +18,7 @@ router = APIRouter()
 )
 async def get_blogs(
     session: AsyncSession = Depends(get_async_session)
-):
+) -> list[BlogView]:
     """Возвращает список всех блогов."""
     db_blogs = await blog_crud.get_multi(session)
     return db_blogs
@@ -34,7 +35,7 @@ async def create_post(
     blog_id: int,
     obj_in: PostCreate,
     session: AsyncSession = Depends(get_async_session)
-):
+) -> PostView:
     """Создает новый пост в блоге."""
     await check_blog_exists(session=session, blog_id=blog_id)
     db_post = await post_crud.create(
@@ -50,7 +51,7 @@ async def create_post(
 async def delete_post(
     post_id: int,
     session: AsyncSession = Depends(get_async_session)
-):
+) -> Response:
     """Удаляет пост."""
     db_post = await check_post_exists(session=session, post_id=post_id)
     await post_crud.remove(session=session, db_obj=db_post)

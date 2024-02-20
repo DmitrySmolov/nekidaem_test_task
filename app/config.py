@@ -28,6 +28,7 @@ class Constants:
     POSTS_PER_PAGE = 10
     MAX_POSTS_IN_FEED = 500
     POSTS_PER_EMAIL = 5
+    MAILING_TIME = (12, 00)  # (hour, minute)
 
 
 constants = Constants()

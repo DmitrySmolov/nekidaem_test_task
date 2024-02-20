@@ -22,7 +22,6 @@ settings = Settings()
 
 class Constants:
     """Константы приложения."""
-    # Пользовательские роли
     TITLE_MAX_LENGTH = 50
     CONTENT_MAX_LENGTH = 140
     EMAIL_MAX_LENGTH = 254

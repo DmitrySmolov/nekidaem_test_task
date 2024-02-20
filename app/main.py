@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi_pagination import add_pagination
 
 from app.api.api_v1.routers import main_router
-from app.config import constants, settings
+from app.config import settings
 
 logging.basicConfig(
     level=logging.INFO,

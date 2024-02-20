@@ -184,7 +184,7 @@ async def get_user_read_statuses(
 async def get_user_feed(
     user_id: int, session: AsyncSession = Depends(get_async_session),
     unread: bool = True, read: bool = True
-) -> Page[PostView]:
+) -> Page[PostView]:  # type: ignore
     """
     Возвращает ленту пользователя с возможностью пагинации и фильтрации по
     непрочитанным и прочитанным постам.

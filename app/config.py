@@ -6,14 +6,15 @@ class Settings(BaseSettings):
     app_title: str = 'NeKidaem'
     app_description: str = 'NeKidaem API'
     database_url: str = (
-        'postgresql+asyncpg://nekidaem:nekidaem@localhost/nekidaem'
+        'postgresql+asyncpg://postgres:postgres@db:5432/nekidaem'
     )
     logging_format: str = '%(asctime)s - %(levelname)s - %(message)s'
     logging_dt_format: str = '%Y-%m-%d %H:%M:%S'
-    redis_url: str = 'redis://localhost:6379/0'
+    redis_url: str = 'redis://broker:6379/0'
 
     class Config:
         env_file = '.env'
+        extra = 'ignore'
 
 
 settings = Settings()
